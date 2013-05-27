@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>title</title>
+    <style type="text/css" media="screen">
+
+      textarea { width: 600px; min-height: 200px; clear: both; display: block; }
+
+      .token:hover { cursor: pointer; }
+      .adjetivos { background-color: #8dd3c7; }
+      .adverbios { background-color: #ffffb3; }
+      .determinantes { background-color: #bebada; }
+      .nombres { background-color: #fb8072; }
+      .verbos { background-color: #80b1d3; }
+      .pronombres { background-color: #fdb462; }
+      .conjunciones { background-color: #b3de69; }
+      .interjecciones { background-color: #fccde5; }
+      .preposiciones { background-color: #d9d9d9; }
+      .signos-de-puntuaciOn { background-color: #bc80bd; }
+      .cifras { background-color: #ccebc5; }
+      .fechas-y-horas { background-color: #ffed6f; }
+    </style>
+    <link rel="stylesheet" href="style.css">
+    <script src="jquery2.js"></script>
+  </head>
+  <body>
+    <h1>Texto para analizar</h1>
+    <textarea></textarea>
+    <button>Enviar</button>
+
+    <div id="result">
+    </div>
+
+    <script type="text/javascript">
+      $(function() {
+          $('button').on('click', function() {
+              $.ajax({
+                  type: "POST",
+                  url: '/freeling/analyze',
+                  data: { 'text': $('textarea').val() },
+                  success: function(data) {
+                      var div = $('div#result');
+                      data.forEach(function(token) {
+                          div.append(
+                              $('<span></span>')
+                                  .data('token', token)
+                                  .addClass('token')
+                                  .addClass(token.parsed_tag ? token.parsed_tag.categoria : '')
+                                  .html(token.form));
+                          div.append(' ');
+                      });
+                  }
+              });
+          });
+
+          $(document).on({
+              mouseenter: function() {
+                  console.log($(this).data('token'));
+              },
+              mouseleave: function() {}
+          }, '.token');
+
+
+      });
+    </script>
+
+  </body>
+</html>
