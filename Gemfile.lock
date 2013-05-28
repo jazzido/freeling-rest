@@ -3,8 +3,8 @@ GEM
   specs:
     cuba (3.1.0)
       rack
-    freeling-analyzer (0.1.1)
-      hashie (~> 2.0.5)
+    freeling-analyzer (0.1.0)
+      hashie
     hashie (2.0.5)
     rack (1.5.2)
 
@@ -13,4 +13,4 @@ PLATFORMS
 
 DEPENDENCIES
   cuba
-  freeling-analyzer
+  freeling-analyzer (= 0.1.0)

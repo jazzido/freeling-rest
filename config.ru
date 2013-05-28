@@ -3,13 +3,12 @@ require 'json'
 
 require './eagle_tags_parse'
 
-Cuba.use Rack::Static, :urls => ["/jquery2.js"], :root => 'static'
+Cuba.use Rack::Static, :urls => ["/jquery2.js", "/underscore.js", "/spin.js"], :root => 'static'
 
 Cuba.define do
-
   on post do
     on 'freeling/analyze' do
-      forms = FreelingWeb.parseText req.params['text']
+      forms = FreelingWeb.parseText(req.params['text'], :server_host => 'localhost:50005')
       res['Content-Type'] = 'application/json; charset=utf-8'
       res.write forms.to_json
     end
@@ -20,8 +19,6 @@ Cuba.define do
       res.write File.open('static/index.html') { |f| f.read }
     end
   end
-
-
 end
 
 run Cuba

@@ -3,7 +3,7 @@ require 'freeling-analyzer'
 module FreelingWeb
 
   # we need to mark these as optional
-  OPTIONAL = { :nombres => [:grado] }
+  OPTIONAL = { :nombres => [:grado], :cifras => [:tipo] }
 
   EAGLE_TAGS = File.open('./eagle_tags_dict.rb', 'r') { |f| eval f.read }
 
@@ -42,8 +42,8 @@ module FreelingWeb
     rv
   end
 
-  def self.parseText(text)
-    analyzer = FreeLing::Analyzer.new(text, :language => :es)
+  def self.parseText(text, analyzer_options={})
+    analyzer = FreeLing::Analyzer.new(text, { :language => :es }.merge(analyzer_options))
     analyzer.tokens.map { |t| 
       t[:parsed_tag] = parseTag t[:tag]
       t

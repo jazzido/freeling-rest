@@ -4,8 +4,51 @@
     <meta charset="utf-8">
     <title>title</title>
     <style type="text/css" media="screen">
+      body {
+          width: 960px;
+          font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+          margin: 0 auto;
+      }
 
-      textarea { width: 600px; min-height: 200px; clear: both; display: block; }
+
+      textarea {
+          width: 600px; min-height: 100px; clear: both; display: block;
+          font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+          font-size: 15px;
+          margin-bottom: 10px;
+      }
+
+      button {
+          width: 100px; height: 50px;
+          border: 1px solid #ccc; font-size: 15px;
+          background-color: lightblue;
+          cursor: pointer;
+      }
+
+      button:hover {
+          background-color: lightgrey;
+      }
+
+      #referencia { line-height: 40px; font-size: 10px; }
+      #referencia span { font-size: 10px; padding: 2px;}
+
+      #tooltip {
+          display: none;
+          position: absolute; z-index: 100;
+          background-color: #eee;
+          border: 1px solid #ddd;
+          padding: 5px; font-size: 12px;
+
+      }
+
+        #tooltip ul {
+            list-style-type: none;
+            margin: 0; padding: 0;
+        }
+
+      #result {
+          margin-top: 20px;
+      }
 
       .token:hover { cursor: pointer; }
       .adjetivos { background-color: #8dd3c7; }
@@ -21,26 +64,83 @@
       .cifras { background-color: #ccebc5; }
       .fechas-y-horas { background-color: #ffed6f; }
     </style>
-    <link rel="stylesheet" href="style.css">
     <script src="jquery2.js"></script>
+    <script src="underscore.js"></script>
+    <script src="spin.js"></script>
   </head>
   <body>
-    <h1>Texto para analizar</h1>
-    <textarea></textarea>
-    <button>Enviar</button>
+    <h1><a href="http://github.com/jazzido/freeling-rest">freeling-rest</a>: REST endpoint para <a href="http://github.com/munshkr/freeling-analyzer-ruby"> freeling-analyzer</a></h1>
+    <p>Herramienta de demostración de <a href="http://github.com/jazzido/freeling-rest">freeling-rest</a>.</p>
+    <textarea placeholder="Ingresar texto a analizar..."></textarea>
+    <button><span>Enviar</span></button><span id="spinner"></span>
 
     <div id="result">
     </div>
+    <p id="referencia" style="display: none;">
+      <span class="adjetivos">&nbsp;</span> adjetivos
+      <span class="adverbios">&nbsp;</span> adverbios
+      <span class="determinantes">&nbsp;</span> determinantes
+      <span class="nombres">&nbsp;</span> nombres
+      <span class="verbos">&nbsp;</span> verbos
+      <span class="pronombres">&nbsp;</span> pronombres
+      <span class="conjunciones">&nbsp;</span> conjunciones
+      <span class="interjecciones">&nbsp;</span> interjecciones
+      <span class="preposiciones">&nbsp;</span> preposiciones
+      <span class="signos-de-puntuaciOn">&nbsp;</span> signos-de-puntuacion
+      <span class="cifras">&nbsp;</span> cifras
+      <span class="fechas-y-horas">&nbsp;</span> fechas-y-horas
+    </p>
+
+    <div id="tooltip">
+    </div>
+
+    <p>Disponible bajo licencia MIT — Copyright © 2013 Manuel Aristarán</p>
 
     <script type="text/javascript">
       $(function() {
+
+          var tmpl = _.template("<ul><% _.each(_.pairs(_.omit(data, 'parsed_tag')), function(p) { %> \
+                                  <li><strong><%= p[0] %></strong>: <%= p[1] %></li> \
+                                 <% }); %> \
+                                 <li><strong>categoría</strong>: <%= data.parsed_tag.categoria %></li> \
+                                 <% _.each(_.pairs(_.omit(data.parsed_tag, ['categoria', 'categoria_nombre'])), function(p) { %> \
+                                  <li><strong><li><%= p[0] %></strong>: <%= p[1] ? p[1].name : '-' %></li> \
+                                 <% });%> \
+                                 </ul>");
+
+          var opts = {
+              lines: 9, // The number of lines to draw
+              length: 12, // The length of each line
+              width: 2, // The line thickness
+              radius: 0, // The radius of the inner circle
+              corners: 1, // Corner roundness (0..1)
+              rotate: 0, // The rotation offset
+              direction: 1, // 1: clockwise, -1: counterclockwise
+              color: '#000', // #rgb or #rrggbb
+              speed: 1.1, // Rounds per second
+              trail: 60, // Afterglow percentage
+              shadow: false, // Whether to render a shadow
+              hwaccel: true, // Whether to use hardware acceleration
+              className: 'spinner', // The CSS class to assign to the spinner
+              zIndex: 2e9, // The z-index (defaults to 2000000000)
+              top: 'auto', // Top position relative to parent in px
+              left: 'auto' // Left position relative to parent in px
+          };
+          var spinner = new Spinner(opts).spin($("#spinner")[0]);
+          spinner.stop();
+
           $('button').on('click', function() {
+              $(this).attr('disabled', 'disabled');
+              spinner.spin();
+
               $.ajax({
                   type: "POST",
                   url: '/freeling/analyze',
                   data: { 'text': $('textarea').val() },
                   success: function(data) {
                       var div = $('div#result');
+                      $('span', div).remove();
+                      $('p#referencia').show();
                       data.forEach(function(token) {
                           div.append(
                               $('<span></span>')
@@ -49,6 +149,8 @@
                                   .addClass(token.parsed_tag ? token.parsed_tag.categoria : '')
                                   .html(token.form));
                           div.append(' ');
+
+                          $('button').removeAttr('disabled');
                       });
                   }
               });
@@ -56,12 +158,15 @@
 
           $(document).on({
               mouseenter: function() {
-                  console.log($(this).data('token'));
+                  $('#tooltip')
+                      .html(tmpl({data: $(this).data('token') }))
+                      .css({ top: ($(this).offset().top - 180) + 'px', left: $(this).offset().left + 'px' })
+                      .show();
               },
-              mouseleave: function() {}
+              mouseleave: function() {
+                  $('#tooltip').hide();
+              }
           }, '.token');
-
-
       });
     </script>
 
