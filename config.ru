@@ -3,7 +3,7 @@ require 'json'
 
 require './eagle_tags_parse'
 
-Cuba.use Rack::Static, :urls => ["/jquery2.js", "/underscore.js", "/spin.js"], :root => 'static'
+Cuba.use Rack::Static, :urls => ["/jquery2.js", "/underscore.js", "/spin.js"], :root => 'public'
 
 Cuba.define do
   on post do
@@ -16,7 +16,7 @@ Cuba.define do
 
   on get do
     on root do
-      res.write File.open('static/index.html') { |f| f.read }
+      res.write File.open('public/index.html') { |f| f.read }
     end
   end
 end
